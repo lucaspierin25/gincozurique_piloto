@@ -1,0 +1,12 @@
+# O site publicado só precisa de index.html, css/, js/, lib/ e data/.
+# Estes ficam no GitHub, mas não vão para o Vercel:
+.claude
+_backup_layout_antigo
+design-system
+scripts
+shp
+shp geojason
+server.py
+iniciar_webgis.bat
+README.md
+CLAUDE.md

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ginco Zurique | Geoportal</title>
+
+  <meta name="description" content="Geoportal do Loteamento Ginco Zurique — consulta de lotes, quadras e áreas de preservação.">
+  <meta name="theme-color" content="#0077b6">
+
+  <!-- Fontes: IBM Plex Sans (textos) e IBM Plex Mono (números e coordenadas) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="lib/leaflet.css">
+
+  <!-- Estilos Customizados do Geoportal -->
+  <link rel="stylesheet" href="css/style.css?v=2026.10.18">
+</head>
+<body>
+
+  <!-- ======================================================================
+       MAPA EM TELA CHEIA (os painéis flutuam por cima dele)
+       ====================================================================== -->
+  <div id="map" role="application" aria-label="Mapa do loteamento"></div>
+
+  <!-- ======================================================================
+       PAINEL PRINCIPAL FLUTUANTE (ESQUERDA)
+       ====================================================================== -->
+  <aside id="sidebar" class="panel">
+
+    <!-- Cabeçalho do painel: identidade do projeto -->
+    <div class="panel-header">
+      <div class="brand-logo" title="Geoportal Piloto">
+        <span class="icon-svg">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/>
+          </svg>
+        </span>
+      </div>
+      <div class="brand-info">
+        <h1>Ginco Zurique</h1>
+        <p>Geoportal Piloto • Cuiabá/MT</p>
+      </div>
+      <button id="sidebar-toggle" class="btn-ghost" aria-expanded="true" aria-controls="sidebar" title="Recolher / expandir painel" aria-label="Recolher / expandir painel">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- Busca Rápida de Lotes -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <span class="search-icon icon-svg icon-sm">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+          </span>
+          <input
+            type="text"
+            id="main-search-input"
+            class="search-input"
+            placeholder="Buscar lote ou quadra"
+            autocomplete="off"
+          >
+          <button id="search-clear" class="search-clear-btn" title="Limpar busca" aria-label="Limpar busca">
+            <span class="icon-svg icon-sm">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+        <div id="search-dropdown" class="search-results-dropdown"></div>
+      </div>
+
+      <!-- Abas de Navegação -->
+      <div class="sidebar-tabs" role="tablist" aria-label="Seções do painel">
+        <button class="tab-btn active" data-tab="camadas" role="tab" aria-selected="true">Camadas</button>
+        <button class="tab-btn" data-tab="filtros" role="tab" aria-selected="false">Filtros</button>
+        <button class="tab-btn" data-tab="estatisticas" role="tab" aria-selected="false">Dados</button>
+        <button class="tab-btn" data-tab="medicao" role="tab" aria-selected="false">Medir</button>
+        <button class="tab-btn" data-tab="sobre" role="tab" aria-selected="false">Ajuda</button>
+      </div>
+
+      <div class="sidebar-content">
+
+        <!-- ABA 1: CAMADAS -->
+        <div id="tab-camadas" class="tab-pane active">
+          <p class="hint-text">
+            Use a chave para mostrar ou ocultar cada camada.
+            <span class="only-mouse">Passe o mouse sobre ela para mudar a ordem, editar a cor ou aproximar o mapa.</span>
+            <span class="only-touch">Os botões ao lado do nome editam a cor ou aproximam o mapa.</span>
+          </p>
+
+          <!-- Lista Interativa de Camadas (Renderizada via JS) -->
+          <div id="layers-manager-container"></div>
+
+          <!-- Carregar Camada Externa Dinâmica -->
+          <label class="upload-box">
+            <span class="upload-title"><span class="icon-svg icon-sm"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span> Adicionar camada GeoJSON</span>
+            <span class="upload-desc">Selecione um arquivo .geojson do seu computador</span>
+            <input type="file" id="custom-geojson-input" accept=".geojson,.json">
+          </label>
+        </div>
+
+        <!-- ABA 2: FILTROS -->
+        <div id="tab-filtros" class="tab-pane">
+          <p class="hint-text">Escolha uma quadra para destacar apenas os lotes dela no mapa.</p>
+
+          <label class="field-label" for="filter-quadra-select">Quadra</label>
+          <select id="filter-quadra-select" class="field-select">
+            <option value="">Todas as quadras (294 lotes)</option>
+            <option value="01">Quadra 01 (20 lotes)</option>
+            <option value="02">Quadra 02 (20 lotes)</option>
+            <option value="03">Quadra 03 (26 lotes)</option>
+            <option value="04">Quadra 04 (26 lotes)</option>
+            <option value="05">Quadra 05 (24 lotes)</option>
+            <option value="06">Quadra 06 (16 lotes)</option>
+            <option value="07">Quadra 07 (26 lotes)</option>
+            <option value="08">Quadra 08 (43 lotes)</option>
+            <option value="09">Quadra 09 (30 lotes)</option>
+            <option value="10">Quadra 10 (33 lotes)</option>
+            <option value="11">Quadra 11 (30 lotes)</option>
+          </select>
+
+          <button class="btn-pill full" onclick="WebGIS.clearQuadraFilter()">
+            <span class="icon-svg icon-sm">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+              </svg>
+            </span>
+            <span>Limpar filtro</span>
+          </button>
+
+          <div id="filter-results-summary"></div>
+        </div>
+
+        <!-- ABA 3: DADOS -->
+        <div id="tab-estatisticas" class="tab-pane">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Lotes</span>
+              <span class="stat-value" id="stat-total-lotes">294</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Área dos lotes</span>
+              <span class="stat-value" id="stat-area-lotes">20,02 ha</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Preservação (APP)</span>
+              <span class="stat-value">22,15 ha</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Área média do lote</span>
+              <span class="stat-value" id="stat-avg-area">681 m²</span>
+            </div>
+          </div>
+
+          <div class="section-title">Lotes por quadra</div>
+          <p class="hint-text">Clique em uma quadra para destacá-la no mapa.</p>
+          <div id="stats-quadras-list" class="quadras-list"></div>
+        </div>
+
+        <!-- ABA 4: MEDIÇÃO -->
+        <div id="tab-medicao" class="tab-pane">
+          <p class="hint-text">
+            Escolha o tipo de medição e marque os pontos no mapa.
+            <span class="only-mouse">Dê <b>clique duplo</b> para terminar.</span>
+            <span class="only-touch">Toque em <b>Concluir</b> no aviso que aparece sobre o mapa para terminar.</span>
+          </p>
+
+          <div class="measure-buttons">
+            <button class="btn-pill" onclick="WebGIS.startMeasure('distance')">
+              <span class="icon-svg icon-sm">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m15 5 4 4"/><path d="m13 7 4 4"/><path d="m11 9 4 4"/><path d="m9 11 4 4"/><path d="m7 13 4 4"/><path d="m5 15 4 4"/><path d="m2 22 20-20"/>
+                </svg>
+              </span>
+              <span>Distância</span>
+            </button>
+            <button class="btn-pill" onclick="WebGIS.startMeasure('area')">
+              <span class="icon-svg icon-sm">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+                </svg>
+              </span>
+              <span>Área</span>
+            </button>
+            <button class="btn-pill danger" onclick="WebGIS.clearMeasure()" title="Apagar medição" aria-label="Apagar medição">
+              <span class="icon-svg icon-sm">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <div id="measure-output"></div>
+        </div>
+
+        <!-- ABA 5: AJUDA -->
+        <div id="tab-sobre" class="tab-pane">
+          <div class="section-title">Como usar</div>
+          <ol class="help-list">
+            <li><b>Ver dados de um lote:</b> clique sobre ele no mapa.</li>
+            <li><b>Encontrar um lote:</b> digite na busca acima (ex: “Q04 L05”).</li>
+            <li><b>Mostrar/ocultar camadas:</b> use as chaves na aba Camadas.</li>
+            <li><b>Trocar o mapa de fundo:</b> botão no canto inferior esquerdo.</li>
+            <li><b>Ver tudo em tabela:</b> botão “Tabela” no canto superior direito.</li>
+            <li><b>Medir:</b> aba Medir, clique no mapa e dê clique duplo para terminar.</li>
+          </ol>
+
+          <div class="section-title">Sobre o projeto</div>
+          <p class="about-text">
+            Loteamento Ginco Zurique — Cuiabá/MT<br>
+            294 lotes em 11 quadras<br>
+            Sistema: WGS84 / UTM 21S (SIRGAS 2000)
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======================================================================
+       BARRA DE AÇÕES FLUTUANTE (DIREITA, TOPO)
+       ====================================================================== -->
+  <div class="top-actions">
+    <button id="btn-toggle-table" class="btn-pill" title="Abrir tabela de atributos" aria-label="Abrir tabela de atributos">
+      <span class="icon-svg icon-sm">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/>
+        </svg>
+      </span>
+      <span>Tabela</span>
+    </button>
+
+    <div class="btn-group">
+      <button id="btn-export-map" class="btn-icon" title="Salvar imagem do mapa" aria-label="Salvar imagem do mapa">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
+          </svg>
+        </span>
+      </button>
+      <button id="btn-dark-toggle" class="btn-icon" title="Modo escuro / claro" aria-label="Modo escuro / claro">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+        </span>
+      </button>
+      <button id="btn-fullscreen" class="btn-icon" title="Tela cheia" aria-label="Tela cheia">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/>
+          </svg>
+        </span>
+      </button>
+      <button id="btn-about" class="btn-icon" title="Sobre o projeto" aria-label="Sobre o projeto">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Banner de Filtro Ativo (topo, centro) -->
+  <div id="active-filter-banner" class="active-filter-banner"></div>
+
+  <!-- ======================================================================
+       CONTROLES DE NAVEGAÇÃO (DIREITA, BASE)
+       ====================================================================== -->
+  <div class="floating-tools">
+    <div class="btn-stack">
+      <button class="map-control-btn" title="Aproximar" aria-label="Aproximar" onclick="WebGIS.map.zoomIn()">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        </span>
+      </button>
+      <button class="map-control-btn" title="Afastar" aria-label="Afastar" onclick="WebGIS.map.zoomOut()">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
+        </span>
+      </button>
+    </div>
+    <div class="btn-stack">
+      <button class="map-control-btn" title="Voltar para o loteamento" aria-label="Voltar para o loteamento" onclick="WebGIS.zoomToHome()">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </span>
+      </button>
+      <button class="map-control-btn" title="Minha localização" aria-label="Minha localização" onclick="WebGIS.locateUser()">
+        <span class="icon-svg icon-sm">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" x2="12" y1="2" y2="5"/><line x1="12" x2="12" y1="19" y2="22"/><line x1="2" x2="5" y1="12" y2="12"/><line x1="19" x2="22" y1="12" y2="12"/><circle cx="12" cy="12" r="7"/>
+          </svg>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       SELETOR DE MAPA DE FUNDO (ESQUERDA, BASE) — recolhido por padrão
+       ====================================================================== -->
+  <div class="basemap-widget" id="basemap-widget">
+    <!-- Miniaturas: um "ladrilho" real de cada mapa, na região do loteamento (zoom 15) -->
+    <div class="basemap-options" role="listbox" aria-label="Opções de mapa de fundo">
+      <div class="basemap-card active" data-basemap="google_satellite" title="Imagem de satélite (Google)" role="option" tabindex="0">
+        <div class="basemap-preview" style="background-image:url('https://mt1.google.com/vt/lyrs=s&x=11278&y=17816&z=15')"></div>
+        <div class="basemap-card-label">Satélite<small>Google</small></div>
+      </div>
+      <div class="basemap-card" data-basemap="google_hybrid" title="Satélite com nomes de ruas (Google)" role="option" tabindex="0">
+        <div class="basemap-preview" style="background-image:url('https://mt1.google.com/vt/lyrs=y&x=11278&y=17816&z=15&hl=pt-BR')"></div>
+        <div class="basemap-card-label">Híbrido<small>Google</small></div>
+      </div>
+      <div class="basemap-card" data-basemap="google_roads" title="Mapa de ruas (Google)" role="option" tabindex="0">
+        <div class="basemap-preview" style="background-image:url('https://mt1.google.com/vt/lyrs=m&x=11278&y=17816&z=15&hl=pt-BR')"></div>
+        <div class="basemap-card-label">Ruas<small>Google</small></div>
+      </div>
+      <div class="basemap-card" data-basemap="osm" title="Mapa de ruas (OpenStreetMap)" role="option" tabindex="0">
+        <div class="basemap-preview" style="background-image:url('https://tile.openstreetmap.org/15/11278/17816.png')"></div>
+        <div class="basemap-card-label">Ruas<small>OSM</small></div>
+      </div>
+      <div class="basemap-card" data-basemap="positron" title="Mapa claro e neutro (CartoDB)" role="option" tabindex="0">
+        <div class="basemap-preview" style="background-image:url('https://a.basemaps.cartocdn.com/light_all/15/11278/17816.png')"></div>
+        <div class="basemap-card-label">Claro<small>Carto</small></div>
+      </div>
+      <div class="basemap-card" data-basemap="satellite" title="Imagem de satélite (Esri)" role="option" tabindex="0">
+        <div class="basemap-preview" style="background-image:url('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/15/17816/11278')"></div>
+        <div class="basemap-card-label">Satélite<small>Esri</small></div>
+      </div>
+    </div>
+
+    <button class="basemap-toggle" id="basemap-toggle" aria-expanded="false" title="Trocar mapa de fundo" aria-label="Trocar mapa de fundo">
+      <span class="basemap-thumb" id="basemap-current-thumb" style="background-image:url('https://mt1.google.com/vt/lyrs=s&x=11278&y=17816&z=15')"></span>
+      <span class="basemap-toggle-text">
+        <small>Mapa de fundo</small>
+        <b id="basemap-current-label">Satélite · Google</b>
+      </span>
+    </button>
+  </div>
+
+  <!-- ======================================================================
+       DICA + COORDENADAS (CENTRO, BASE)
+       ====================================================================== -->
+  <div class="bottom-center">
+    <div id="map-hint" class="map-hint" aria-live="polite">
+      <span class="only-mouse">Clique</span><span class="only-touch">Toque</span> em um lote para ver os dados dele
+    </div>
+    <div class="coords-chip">
+      <span id="status-coords">-15.55059°, -56.08960°</span>
+      <span class="sep">•</span>
+      <span>Zoom <b id="status-zoom">16</b></span>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       TABELA DE ATRIBUTOS (gaveta flutuante inferior)
+       ====================================================================== -->
+  <div id="attribute-drawer" class="attribute-drawer">
+    <div class="drawer-header">
+      <div class="drawer-left">
+        <span class="drawer-title" id="drawer-layer-title">Tabela de atributos</span>
+
+        <select id="table-layer-select" class="drawer-layer-select">
+          <option value="lotes">Lotes (294)</option>
+          <option value="quadras">Quadras (11)</option>
+          <option value="app">APP</option>
+          <option value="curso_dagua">Cursos d'água (9)</option>
+        </select>
+
+        <input type="text" id="table-search-input" class="drawer-search" placeholder="Filtrar na tabela...">
+      </div>
+
+      <div class="drawer-actions">
+        <button id="btn-export-csv" class="btn-pill" title="Baixar como planilha (CSV)" aria-label="Baixar como planilha (CSV)">
+          <span>Baixar CSV</span>
+        </button>
+        <button id="btn-close-drawer" class="btn-ghost" title="Fechar tabela" aria-label="Fechar tabela">
+          <span class="icon-svg icon-sm">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </div>
+    <p class="drawer-hint">Clique em uma linha para localizar no mapa.</p>
+    <div class="table-responsive" id="attr-table-container"></div>
+  </div>
+
+  <!-- ======================================================================
+       MODAL: SOBRE O PROJETO
+       ====================================================================== -->
+  <div id="modal-about" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Sobre o projeto</h3>
+        <button id="btn-close-modal" class="btn-ghost" aria-label="Fechar">
+          <span class="icon-svg icon-sm">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><b>Projeto:</b> Loteamento Ginco Zurique</p>
+        <p><b>Localização:</b> Cuiabá - Mato Grosso, Brasil</p>
+        <p><b>Camadas:</b> Lotes (294), Quadras (11), APP (22,15 ha), Hidrografia (9 trechos) e Implantação CAD.</p>
+        <p><b>Mapas de fundo:</b> Esri World Imagery (satélite), OpenStreetMap e CartoDB Positron.</p>
+        <p><b>Sistema de referência:</b> WGS84 (EPSG:4326) e UTM Zona 21 Sul (SIRGAS 2000).</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pill primary" onclick="document.getElementById('modal-about').classList.remove('open')">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="lib/leaflet.js"></script>
+  <script src="lib/turf.min.js"></script>
+  <script src="lib/html2canvas.min.js"></script>
+
+  <!-- Dados Vetoriais Pré-calculados -->
+  <script src="data/implantacao_data.js"></script>
+  <script src="data/app_data.js"></script>
+  <script src="data/curso_dagua_data.js"></script>
+  <script src="data/quadras_data.js"></script>
+  <script src="data/lotes_data.js"></script>
+
+  <!-- Configuração das Camadas e Mecanismo do WebGIS -->
+  <script src="js/layers_config.js?v=2026.10.18"></script>
+  <script src="js/app.js?v=2026.10.18"></script>
+
+</body>
+</html>

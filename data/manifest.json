@@ -1,0 +1,27 @@
+{
+  "lotes": {
+    "count": 294,
+    "js_file": "data/lotes_data.js",
+    "geojson_file": "shp geojason/lotes_geo.geojson"
+  },
+  "quadras": {
+    "count": 11,
+    "js_file": "data/quadras_data.js",
+    "geojson_file": "shp geojason/quadras_geo.geojson"
+  },
+  "app": {
+    "count": 1,
+    "js_file": "data/app_data.js",
+    "geojson_file": "shp geojason/app_geo.geojson"
+  },
+  "curso_dagua": {
+    "count": 9,
+    "js_file": "data/curso_dagua_data.js",
+    "geojson_file": "shp geojason/curso_dagua_geo.geojson"
+  },
+  "implantacao": {
+    "count": 1,
+    "js_file": "data/implantacao_data.js",
+    "geojson_file": "shp geojason/Implantacao_geo.geojson"
+  }
+}

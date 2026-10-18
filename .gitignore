@@ -1,0 +1,14 @@
+# Arquivos do sistema / sincronização
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Notas pessoais (não fazem parte do portal)
+NOTAS.txt
+
+# Vercel
+.vercel
