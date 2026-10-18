@@ -8,6 +8,24 @@ Mapa com Leaflet; dados vetoriais pré-convertidos em `data/*.js` (variáveis gl
 - Trabalha em dois computadores (casa e serviço), sincronizando pelo GitHub.
 - Prefere fazer tudo pelo Claude Code, sem precisar abrir sites de terceiros.
 
+## Fluxo de trabalho automático (SEMPRE seguir)
+- **Começo:** o hook `SessionStart` em `.claude/settings.json` já roda `git pull` sozinho. Se a mensagem dele disser que
+  NÃO conseguiu puxar, avisar o Lucas antes de editar (pode haver mudança do outro computador).
+- **Fim de cada pedido:** depois de editar e conferir no painel do navegador, fazer **commit + push** para `main`
+  sem esperar ele pedir, com mensagem em português descrevendo a mudança. Avisar no final:
+  "Enviado para o GitHub — o site atualiza em ~1 minuto."
+- **Exceção:** se ele disser "não publica ainda", "é só teste" ou similar, fazer só o commit local (sem push) até ele liberar.
+- **Contexto:** toda decisão nova (cor, posição, regra, preferência) entra na seção "Decisões já tomadas" deste arquivo,
+  no mesmo commit. É assim que o outro computador fica sabendo.
+- Nunca editar nos dois computadores ao mesmo tempo. Nunca usar `git push --force`.
+- A pasta de casa fica dentro do Google Drive, que cria `desktop.ini` dentro de `.git` e quebra o Git; o hook já apaga
+  esses arquivos. Se um comando git falhar com "bad object ... desktop.ini", rodar `find .git -name desktop.ini -delete`.
+
+## Os dois computadores
+- **Casa:** `D:\Drive Lucas\1 Serviços\Webgis PILOTO`.
+- **Serviço:** cópia própria baixada do GitHub numa pasta FORA da nuvem (ex.: `C:\Projetos\gincozurique_piloto`).
+  Ignorar a cópia que a nuvem sincroniza lá.
+
 ## Como rodar e ver
 - Servidor local: `.claude/launch.json` → `python -m http.server 5517` (painel do navegador do Claude Code).
 - Depois de editar, recarregar o painel e conferir; testar também em tamanho de celular (375px).

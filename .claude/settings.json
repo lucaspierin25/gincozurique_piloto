@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "bash",
+            "command": "find .git -name desktop.ini -delete 2>/dev/null; git pull --ff-only --quiet >/dev/null 2>&1 && echo 'GitHub: projeto atualizado automaticamente (git pull ok).' || echo 'GitHub: NAO consegui puxar as atualizacoes (sem internet ou mudancas locais nao enviadas). Avise o usuario antes de editar.'",
+            "timeout": 60,
+            "statusMessage": "Puxando atualizações do GitHub..."
+          }
+        ]
+      }
+    ]
+  }
+}
