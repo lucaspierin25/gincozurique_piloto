@@ -1,0 +1,11 @@
+Notas Workshop Webgis
+
+- Trabalhar tudo em WGS84
+- Codififação para nao ficar com caracteres errados no QGIS. Mudar de UTF 8 para windows 1252
+- Servidor gratuito sql: supabase
+- Caveman - skill que simplifica a resposta do claude code para economizar tokens
+- Sobe os arquivos pro git hub, ele faz a conexão com o supabase, de la joga pro vercel fazer o deploy
+- Entrei no github e criei um repositorio lá. 
+- no claude, pedi pra ele subir o codigo la no git. como tem conexão, acredito que ate a criação do repositorio pudesse ser feita por la.
+- criei uma conta na vercel pelo git, ou seja, ja criou conectada ao git
+- no claude pedi pra ele integrar o repositorio do git ao vercel e publicar, foi feito tudo por lá

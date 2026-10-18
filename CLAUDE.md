@@ -17,6 +17,8 @@ Mapa com Leaflet; dados vetoriais pré-convertidos em `data/*.js` (variáveis gl
 - **Exceção:** se ele disser "não publica ainda", "é só teste" ou similar, fazer só o commit local (sem push) até ele liberar.
 - **Contexto:** toda decisão nova (cor, posição, regra, preferência) entra na seção "Decisões já tomadas" deste arquivo,
   no mesmo commit. É assim que o outro computador fica sabendo.
+- `NOTAS.txt` é o bloco de notas pessoal do Lucas (aprendizados). Vai para o GitHub, mas não para o site.
+  Ele pode editar à mão: incluir as mudanças dele nesse arquivo no próximo commit; se pedir "salva as notas", commit + push só dele.
 - Nunca editar nos dois computadores ao mesmo tempo. Nunca usar `git push --force`.
 - A pasta de casa fica dentro do Google Drive, que cria `desktop.ini` dentro de `.git` e quebra o Git; o hook já apaga
   esses arquivos. Se um comando git falhar com "bad object ... desktop.ini", rodar `find .git -name desktop.ini -delete`.

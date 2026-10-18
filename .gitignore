@@ -7,8 +7,5 @@ Thumbs.db
 __pycache__/
 *.pyc
 
-# Notas pessoais (não fazem parte do portal)
-NOTAS.txt
-
 # Vercel
 .vercel
