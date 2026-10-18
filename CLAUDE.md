@@ -15,7 +15,9 @@ Mapa com Leaflet; dados vetoriais pré-convertidos em `data/*.js` (variáveis gl
 
 ## Publicação
 - GitHub: https://github.com/lucaspierin25/gincozurique_piloto (branch `main`).
-- Vercel publica automaticamente a cada envio para o GitHub. `.vercelignore` tira do site o que não é necessário.
+- Site no ar: https://gincozuriquepiloto.vercel.app (Vercel, plano Hobby, projeto `gincozurique_piloto`).
+- Vercel publica automaticamente a cada envio (push) para a branch `main`. `.vercelignore` tira do site o que não é necessário.
+- Git está em `C:\Program Files\Git\cmd\git.exe` (o login do GitHub fica salvo no Git Credential Manager).
 
 ## Estrutura
 - `index.html` — layout (mapa em tela cheia + painéis flutuantes).
